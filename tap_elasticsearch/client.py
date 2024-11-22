@@ -72,15 +72,7 @@ class TapelasticsearchStream(RESTStream):
 
     @property
     def authenticator(self) -> HTTPBasicAuth:
-        """Return a new authenticator object.
-
-        Returns:
-            An authenticator instance.
-        """
-        return HTTPBasicAuth(
-            username=self.config.get("username", ""),
-            password=self.config.get("password", ""),
-        )
+        return self.tap.authenticator()
 
     @property
     def url_base(self) -> str:
