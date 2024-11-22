@@ -72,7 +72,7 @@ class TapelasticsearchStream(RESTStream):
 
     @property
     def authenticator(self) -> HTTPBasicAuth:
-        return self.tap.authenticator()
+        return self._tap.authenticator
 
     @property
     def url_base(self) -> str:
@@ -83,19 +83,19 @@ class TapelasticsearchStream(RESTStream):
 
     # # Set this value or override `get_new_paginator`.
 
-    @property
-    def http_headers(self) -> dict:
-        """Return the http headers needed.
+    # @property
+    # def http_headers(self) -> dict:
+    #     """Return the http headers needed.
 
-        Returns:
-            A dictionary of HTTP headers.
-        """
-        headers = {}
-        if "user_agent" in self.config:
-            headers["User-Agent"] = self.config.get("user_agent")
-        # If not using an authenticator, you may also provide inline auth headers:
-        # headers["Private-Token"] = self.config.get("auth_token")  # noqa: ERA001
-        return headers
+    #     Returns:
+    #         A dictionary of HTTP headers.
+    #     """
+    #     headers = {}
+    #     if "user_agent" in self.config:
+    #         headers["User-Agent"] = self.config.get("user_agent")
+    #     # If not using an authenticator, you may also provide inline auth headers:
+    #     # headers["Private-Token"] = self.config.get("auth_token")  # noqa: ERA001
+    #     return headers
 
     def get_new_paginator(self) -> CustomPaginator:
         """Create a new pagination helper instance.

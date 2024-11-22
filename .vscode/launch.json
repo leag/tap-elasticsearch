@@ -11,6 +11,16 @@
       "python": "${command:python.interpreterPath}",
       // Set to true to debug third-party library code
       "justMyCode": false,
+    },
+    {
+      "name": "tap-elasticsearch extract",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "tap_elasticsearch.tap",
+      "args": ["--config", ".secrets/config.json", "--catalog", ".secrets/catalog.json"],
+      "python": "${command:python.interpreterPath}",
+      // Set to true to debug third-party library code
+      "justMyCode": false,
     }
   ]
 }
