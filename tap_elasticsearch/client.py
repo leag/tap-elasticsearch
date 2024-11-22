@@ -10,6 +10,7 @@ from typing import Any, Callable, Iterable
 
 import requests
 from requests import Response
+from requests.auth import HTTPBasicAuth
 from singer_sdk import metrics
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseAPIPaginator
@@ -68,6 +69,18 @@ class TapelasticsearchStream(RESTStream):
     """tap-elasticsearch stream class."""
 
     primary_keys = ["_id"]
+
+    @property
+    def authenticator(self) -> HTTPBasicAuth:
+        """Return a new authenticator object.
+
+        Returns:
+            An authenticator instance.
+        """
+        return HTTPBasicAuth(
+            username=self.config.get("username", ""),
+            password=self.config.get("password", ""),
+        )
 
     @property
     def url_base(self) -> str:
