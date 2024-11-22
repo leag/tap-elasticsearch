@@ -1,0 +1,16 @@
+{
+  // launch.json
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "tap-elasticsearch discovery",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "tap_elasticsearch.tap",
+      "args": ["--config", ".secrets/config.json", "--discover"],
+      "python": "${command:python.interpreterPath}",
+      // Set to true to debug third-party library code
+      "justMyCode": false,
+    }
+  ]
+}

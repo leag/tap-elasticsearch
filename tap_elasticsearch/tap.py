@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import requests
+from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError
 from singer_sdk import Stream, Tap
 from singer_sdk import typing as th  # JSON schema typing helpers
@@ -82,13 +83,36 @@ class Tapelasticsearch(Tap):
             description="The interval between requests",
             default=0,
         ),
+        th.Property(
+            "username",
+            th.StringType,
+            description="Username",
+        ),
+        th.Property(
+            "password",
+            th.StringType,
+            secret=True,
+            description="Password",
+        ),
     ).to_dict()
+
+    @property
+    def authenticator(self) -> HTTPBasicAuth:
+        """Return a new authenticator object.
+
+        Returns:
+            An authenticator instance.
+        """
+        return HTTPBasicAuth(
+            username=self.config.get("username", ""),
+            password=self.config.get("password", ""),
+        )
 
     def discover_streams(self) -> list[Stream]:
         """Return a list of discovered streams."""
         url_base = self.config.get("url_base", "")
         try:
-            aliases = requests.get(url_base + "/_aliases", timeout=60).json()
+            aliases = requests.get(url_base + "/_aliases", timeout=60, auth=self.authenticator).json()
         except ConnectionError as e:
             msg = "Could not connect to Elasticsearch instance."
             raise RuntimeError(msg) from e
