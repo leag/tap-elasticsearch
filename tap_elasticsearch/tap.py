@@ -112,7 +112,7 @@ class Tapelasticsearch(Tap):
         """Return a list of discovered streams."""
         url_base = self.config.get("url_base", "")
         try:
-            aliases = requests.get(url_base + "/_all", timeout=60, auth=self.authenticator).json()
+            aliases = requests.get(url_base + "/_aliases", timeout=60, auth=self.authenticator).json()
         except ConnectionError as e:
             msg = "Could not connect to Elasticsearch instance."
             raise RuntimeError(msg) from e
