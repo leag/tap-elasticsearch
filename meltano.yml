@@ -24,6 +24,11 @@ plugins:
       kind: string
     - name: request_interval
       kind: integer
+    - name: username
+      kind: string
+    - name: password
+      kind: string
+      sensitive: true
   loaders:
   - name: target-jsonl
     variant: andyh1203
