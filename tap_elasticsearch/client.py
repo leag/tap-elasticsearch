@@ -214,8 +214,6 @@ class TapelasticsearchStream(RESTStream):
             The updated record dictionary, or ``None`` to skip the record.
         """
         if self.replication_method == "INCREMENTAL":
-            row[self.replication_key] = row["_source"].pop(self.replication_key, None)
-            if row[self.replication_key] is None:
-                row[self.replication_key] = datetime.min
+            row[self.replication_key] = row["_source"].pop(self.replication_key, datetime.min)
         row["_source"] = sanitize_keys(row["_source"])
         return row
