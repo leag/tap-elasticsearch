@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import time
+from datetime import datetime
 import typing as t
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -213,6 +214,8 @@ class TapelasticsearchStream(RESTStream):
             The updated record dictionary, or ``None`` to skip the record.
         """
         if self.replication_method == "INCREMENTAL":
-            row[self.replication_key] = row["_source"].pop(self.replication_key)
+            row[self.replication_key] = row["_source"].pop(self.replication_key, None)
+            if row[self.replication_key] is None:
+                row[self.replication_key] = datetime.min
         row["_source"] = sanitize_keys(row["_source"])
         return row
