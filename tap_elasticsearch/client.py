@@ -7,19 +7,19 @@ import time
 import typing as t
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Iterable
 
-import requests
-from requests import Response
 from singer_sdk import metrics
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseAPIPaginator
 from singer_sdk.streams import RESTStream
 
-_Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
 SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
 
 if t.TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    import requests
+    from requests import Response
     from requests.auth import HTTPBasicAuth
 
 
