@@ -11,9 +11,8 @@ keywords = [
 license = "Apache-2.0"
 
 [tool.poetry.dependencies]
-python = "<3.12,>=3.8"
+python = "<3.13,>=3.9"
 singer-sdk = "^0.42.1"
-requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"

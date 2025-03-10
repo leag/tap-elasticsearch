@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import re
 import time
-from datetime import datetime
 import typing as t
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Callable, Iterable
 
 import requests
 from requests import Response
-from requests.auth import HTTPBasicAuth
 from singer_sdk import metrics
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseAPIPaginator
@@ -20,8 +19,14 @@ from singer_sdk.streams import RESTStream
 _Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
 SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
 
+if t.TYPE_CHECKING:
+    from requests.auth import HTTPBasicAuth
 
-def sanitize_keys(value):
+
+def sanitize_keys(
+    value: dict | list | str | float | None,
+) -> dict | list | str | float | None:
+    """Replace special characters in keys with underscores."""
     if isinstance(value, dict):
         return {
             replace_special_chars(key): sanitize_keys(val) for key, val in value.items()
@@ -31,7 +36,8 @@ def sanitize_keys(value):
     return value
 
 
-def replace_special_chars(key):
+def replace_special_chars(key: str) -> str:
+    """Replace special characters in keys with underscores."""
     return re.sub("[ \\-&\\/]", "_", key)
 
 
@@ -43,6 +49,7 @@ class CustomPaginator(BaseAPIPaginator):
 
         Args:
             start_value: Initial value.
+            page_size: Number of records per page.
         """
         self._value: t.TPageToken = start_value
         self._page_size = page_size
@@ -51,6 +58,7 @@ class CustomPaginator(BaseAPIPaginator):
         self._last_seen_record: dict | None = None
 
     def get_next(self, response: requests.Response) -> str | None:
+        """Return the next page token from the response."""
         data = response.json()["hits"]["hits"]
         length = len(data)
         try:
@@ -69,10 +77,12 @@ class CustomPaginator(BaseAPIPaginator):
 class TapelasticsearchStream(RESTStream):
     """tap-elasticsearch stream class."""
 
-    primary_keys = ["_id"]
+    primary_keys: t.ClassVar[list[str]] = ["_id"]
+    is_sorted = True
 
     @property
     def authenticator(self) -> HTTPBasicAuth:
+        """Return a new authenticator object."""
         return self._tap.authenticator
 
     @property
@@ -82,21 +92,6 @@ class TapelasticsearchStream(RESTStream):
 
     records_jsonpath = "$.hits.hits[*]"  # Or override `parse_response`.
 
-    # # Set this value or override `get_new_paginator`.
-
-    # @property
-    # def http_headers(self) -> dict:
-    #     """Return the http headers needed.
-
-    #     Returns:
-    #         A dictionary of HTTP headers.
-    #     """
-    #     headers = {}
-    #     if "user_agent" in self.config:
-    #         headers["User-Agent"] = self.config.get("user_agent")
-    #     # If not using an authenticator, you may also provide inline auth headers:
-    #     # headers["Private-Token"] = self.config.get("auth_token")  # noqa: ERA001
-    #     return headers
 
     def get_new_paginator(self) -> CustomPaginator:
         """Create a new pagination helper instance.
@@ -116,7 +111,7 @@ class TapelasticsearchStream(RESTStream):
     def prepare_request_payload(
         self,
         context: dict | None,
-        next_page_token: Any | None,
+        next_page_token: str | None,
     ) -> dict | None:
         """Prepare the data payload for the REST API request.
 
@@ -214,6 +209,8 @@ class TapelasticsearchStream(RESTStream):
             The updated record dictionary, or ``None`` to skip the record.
         """
         if self.replication_method == "INCREMENTAL":
-            row[self.replication_key] = row["_source"].pop(self.replication_key, datetime.min)
+            row[self.replication_key] = row["_source"].pop(
+                self.replication_key, datetime.min,
+            )
         row["_source"] = sanitize_keys(row["_source"])
         return row

@@ -4,50 +4,49 @@ from __future__ import annotations
 
 import requests
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 from singer_sdk import Stream, Tap
 from singer_sdk import typing as th  # JSON schema typing helpers
 
 from tap_elasticsearch.client import TapelasticsearchStream
-
 
 generic_schema = {
     "properties": {
         "_index": {
             "type": [
                 "string",
-                "null"
-            ]
+                "null",
+            ],
         },
         "_id": {
             "type": [
                 "string",
-                "null"
-            ]
+                "null",
+            ],
         },
         "_type": {
             "type": [
                 "string",
-                "null"
-            ]
+                "null",
+            ],
         },
         "_score": {
             "type": [
                 "number",
-                "null"
-            ]
+                "null",
+            ],
         },
         "sort": {
             "type": [
                 "array",
-                "null"
-            ]
+                "null",
+            ],
         },
         "_source": {
             "type": [
                 "object",
-                "null"
-            ]
+                "null",
+            ],
         },
     },
     "type": "object",
@@ -108,12 +107,16 @@ class Tapelasticsearch(Tap):
             password=self.config.get("password", ""),
         )
 
-    def discover_streams(self) -> list[Stream]:
+    def discover_streams(self) -> list[Stream]: # type: ignore[valid-type]
         """Return a list of discovered streams."""
         url_base = self.config.get("url_base", "")
         try:
-            aliases = requests.get(url_base + "/_aliases", timeout=60, auth=self.authenticator).json()
-        except ConnectionError as e:
+            aliases = requests.get(
+                f"{url_base}/_aliases",
+                timeout=60,
+                auth=self.authenticator,
+            ).json()
+        except RequestsConnectionError as e:
             msg = "Could not connect to Elasticsearch instance."
             raise RuntimeError(msg) from e
 
