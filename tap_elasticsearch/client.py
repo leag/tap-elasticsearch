@@ -130,9 +130,18 @@ class TapelasticsearchStream(RESTStream):
         params: dict = {"size": self.config.get("page_size", 1000)}
         if self.replication_method == "FULL_TABLE":
             params["query"] = {
-                "match_all": {},
+                "bool": {
+                    "must": [
+                        {
+                            "exists": {
+                                "field": key,
+                            },
+                        }
+                        for key in self.primary_keys
+                    ],
+                },
             }
-            params["sort"] = [{self.primary_keys[0]: "asc"}]
+            params["sort"] = [{key: {"order": "asc"}} for key in self.primary_keys]
         elif self.replication_method == "INCREMENTAL":
             starting_replication_value = self.get_starting_replication_key_value(
                 context,
@@ -219,7 +228,11 @@ class TapelasticsearchStream(RESTStream):
         if self.replication_method == "INCREMENTAL":
             row[self.replication_key] = row["_source"].pop(
                 self.replication_key,
-                datetime.min,
+                None,
             )
+        else:
+            for key in self.primary_keys:
+                if key in row["_source"]:
+                    row[key] = row["_source"].pop(key)
         row["_source"] = sanitize_keys(row["_source"])
         return row
