@@ -107,7 +107,7 @@ class Tapelasticsearch(Tap):
             password=self.config.get("password", ""),
         )
 
-    def discover_streams(self) -> list[Stream]: # type: ignore[valid-type]
+    def discover_streams(self) -> list[Stream]:  # type: ignore[valid-type]
         """Return a list of discovered streams."""
         url_base = self.config.get("url_base", "")
         try:

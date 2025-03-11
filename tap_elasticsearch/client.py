@@ -78,7 +78,11 @@ class TapelasticsearchStream(RESTStream):
     """tap-elasticsearch stream class."""
 
     primary_keys: t.ClassVar[list[str]] = ["_id"]
-    is_sorted = True
+
+    @property
+    def is_sorted(self) -> bool:
+        """Return True if the stream is sorted."""
+        return self.replication_method == "INCREMENTAL"
 
     @property
     def authenticator(self) -> HTTPBasicAuth:
@@ -91,7 +95,6 @@ class TapelasticsearchStream(RESTStream):
         return self.config.get("url_base")
 
     records_jsonpath = "$.hits.hits[*]"  # Or override `parse_response`.
-
 
     def get_new_paginator(self) -> CustomPaginator:
         """Create a new pagination helper instance.
@@ -137,7 +140,12 @@ class TapelasticsearchStream(RESTStream):
 
             params["query"] = {
                 "bool": {
-                    "filter": [
+                    "must": [
+                        {
+                            "exists": {
+                                "field": self.replication_key,
+                            },
+                        },
                         {
                             "range": {
                                 self.replication_key: {
@@ -148,7 +156,7 @@ class TapelasticsearchStream(RESTStream):
                     ],
                 },
             }
-            params["sort"] = [{self.replication_key: "asc"}]
+            params["sort"] = [{self.replication_key: {"order": "asc"}}]
         if next_page_token:
             params["search_after"] = next_page_token
         return params
@@ -210,7 +218,8 @@ class TapelasticsearchStream(RESTStream):
         """
         if self.replication_method == "INCREMENTAL":
             row[self.replication_key] = row["_source"].pop(
-                self.replication_key, datetime.min,
+                self.replication_key,
+                datetime.min,
             )
         row["_source"] = sanitize_keys(row["_source"])
         return row
