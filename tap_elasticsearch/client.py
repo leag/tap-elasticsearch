@@ -38,7 +38,7 @@ def patched_to_json_compatible(
         utc = datetime.timezone.utc
         return (
             val.replace(tzinfo=utc) if val.tzinfo is None else val
-        ).isoformat("T", timespec="milliseconds")
+        ).isoformat("T", timespec="seconds")
     if isinstance(val, uuid.UUID):
         return str(val)
     return val
