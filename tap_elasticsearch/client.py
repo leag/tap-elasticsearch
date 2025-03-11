@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 import singer_sdk.helpers._typing
+import singer_sdk.helpers._state
 from singer_sdk import metrics
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseAPIPaginator
@@ -44,6 +45,7 @@ def patched_to_json_compatible(
     return val
 
 # Monkey-patch the function in singer_sdk
+singer_sdk.helpers._state.to_json_compatible = patched_to_json_compatible # noqa: SLF001
 singer_sdk.helpers._typing.to_json_compatible = patched_to_json_compatible # noqa: SLF001
 
 def sanitize_keys(
