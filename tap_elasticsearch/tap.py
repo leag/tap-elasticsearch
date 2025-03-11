@@ -2,13 +2,39 @@
 
 from __future__ import annotations
 
+import datetime
+import uuid
+
 import requests
+import singer_sdk.helpers._state as state_module
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from singer_sdk import Stream, Tap
 from singer_sdk import typing as th  # JSON schema typing helpers
 
 from tap_elasticsearch.client import TapelasticsearchStream
+import logging
+
+UTC = datetime.timezone.utc
+logger = logging.getLogger(__name__)
+
+def patched_to_json_compatible(val: t.Any) -> t.Any:  # noqa: ANN401
+    """Return as string if datetime. JSON does not support proper datetime types."""
+    if isinstance(val, (datetime.datetime,)):
+        # Make naive datetimes UTC
+        return (val.replace(tzinfo=UTC) if val.tzinfo is None else val).isoformat("T")
+    if isinstance(val, (uuid.UUID,)):
+        return str(val)
+    if isinstance(val, str) and val.endswith("Z") and "T" in val:
+        try:
+            return datetime.datetime.fromisoformat(val).isoformat("T")
+        except ValueError:
+            return val
+    return val
+
+# Monkey-patch the function in singer_sdk
+state_module.to_json_compatible = patched_to_json_compatible
+
 
 generic_schema = {
     "properties": {

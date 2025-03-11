@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-import datetime
 import re
 import time
 import typing as t
-import uuid
-from datetime import datetime
 from pathlib import Path
 
-import singer_sdk.helpers._typing
-import singer_sdk.helpers._state
 from singer_sdk import metrics
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseAPIPaginator
@@ -27,26 +22,6 @@ if t.TYPE_CHECKING:
     from requests.auth import HTTPBasicAuth
 
 
-def patched_to_json_compatible(
-    val: datetime.datetime | uuid.UUID | str | float | bool | None,
-) -> str | float | bool | None:
-    """Return as string if datetime with millisecond precision.
-
-    JSON does not support proper datetime types.
-    """
-    if isinstance(val, datetime.datetime):
-        # Ensure that naive datetimes are assumed to be in UTC
-        utc = datetime.timezone.utc
-        return (
-            val.replace(tzinfo=utc) if val.tzinfo is None else val
-        ).isoformat("T", timespec="seconds")
-    if isinstance(val, uuid.UUID):
-        return str(val)
-    return val
-
-# Monkey-patch the function in singer_sdk
-singer_sdk.helpers._state.to_json_compatible = patched_to_json_compatible # noqa: SLF001
-singer_sdk.helpers._typing.to_json_compatible = patched_to_json_compatible # noqa: SLF001
 
 def sanitize_keys(
     value: dict | list | str | float | None,
